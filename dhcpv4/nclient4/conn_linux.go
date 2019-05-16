@@ -150,7 +150,10 @@ func (upc *BroadcastRawUDPConn) ReadFrom(b []byte) (int, net.Addr, error) {
 			IP:   net.IP(ipHdr.SourceAddress()),
 			Port: int(udpHdr.SourcePort()),
 		}
-		return copy(b, buf.ReadAll()), srcAddr, nil
+		// Extra padding after end of IP packet shoudl be ignored,
+		// if not dhcp option parsing will fail.
+		dhcpLen := int(ipHdr.PayloadLength()) - UDPMinimumSize
+		return copy(b, buf.Consume(dhcpLen)), srcAddr, nil
 	}
 }
 
